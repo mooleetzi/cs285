@@ -1,5 +1,9 @@
 import os
 import time
+import sys
+
+sys.path.append(os.path.abspath(
+    os.path.join(os.path.abspath(os.path.join(os.path.abspath(os.path.dirname(__file__)), os.pardir)), os.pardir)))
 
 from cs285.infrastructure.rl_trainer import RL_Trainer
 from cs285.agents.bc_agent import BCAgent
