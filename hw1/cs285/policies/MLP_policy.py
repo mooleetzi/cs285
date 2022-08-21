@@ -81,7 +81,16 @@ class MLPPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
             observation = obs[None]
 
         # TODO return the action that the policy prescribes
-        raise NotImplementedError
+        # HINT1: you can access the policy's neural network that you defined
+        # in `__init__` by doing `self.mean_net`
+        # HINT2: in the discrete case, this action can be an int
+        # HINT3: in the continuous case, this action can be a np.ndarray
+        if self.discrete:
+            logits = self.logits_na(observation)
+            return torch.argmax(logits, dim=1).item()
+        else:
+            mean = self.mean_net(observation)
+            return mean.detach().numpy()
 
     # update/train this policy
     def update(self, observations, actions, **kwargs):
@@ -93,7 +102,13 @@ class MLPPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
     # return more flexible objects, such as a
     # `torch.distributions.Distribution` object. It's up to you!
     def forward(self, observation: torch.FloatTensor) -> Any:
-        raise NotImplementedError
+        if self.discrete:
+            logits = self.logits_na(observation)
+            return distributions.Categorical(logits=logits)
+        else:
+            mean = self.mean_net(observation)
+            std = torch.exp(self.logstd)
+            return distributions.Normal(mean, std)
 
 
 #####################################################
@@ -109,7 +124,20 @@ class MLPPolicySL(MLPPolicy):
             adv_n=None, acs_labels_na=None, qvals=None
     ):
         # TODO: update the policy and return the loss
-        loss = TODO
+        loss = None
+        self.optimizer.zero_grad()
+        if self.discrete:
+            logits_na = self.forward(observations)
+            if acs_labels_na is None:
+                acs_labels_na = torch.argmax(logits_na, dim=1)
+            loss = self.loss(logits_na, acs_labels_na)
+        else:
+            mean_na = self.forward(observations)
+            if qvals is None:
+                qvals = mean_na
+            loss = self.loss(mean_na, qvals)
+        loss.backward()
+        self.optimizer.step()
         return {
             # You can add extra logging information here, but keep this line
             'Training Loss': ptu.to_numpy(loss),

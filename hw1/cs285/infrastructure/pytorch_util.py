@@ -5,7 +5,6 @@ from torch import nn
 
 Activation = Union[str, nn.Module]
 
-
 _str_to_activation = {
     'relu': nn.ReLU(),
     'tanh': nn.Tanh(),
@@ -47,7 +46,12 @@ def build_mlp(
 
     # TODO: return a MLP. This should be an instance of nn.Module
     # Note: nn.Sequential is an instance of nn.Module.
-    raise NotImplementedError
+    # raise NotImplementedError
+    return nn.Sequential(
+        *[nn.Linear(input_size, size), activation] * n_layers,
+        nn.Linear(size, output_size),
+        output_activation,
+    )
 
 
 device = None
@@ -58,6 +62,9 @@ def init_gpu(use_gpu=True, gpu_id=0):
     if torch.cuda.is_available() and use_gpu:
         device = torch.device("cuda:" + str(gpu_id))
         print("Using GPU id {}".format(gpu_id))
+    # elif torch.has_mps and use_gpu:
+    #     device = torch.device("mps")
+    #     print("Using MPS device")
     else:
         device = torch.device("cpu")
         print("GPU not detected. Defaulting to CPU.")
