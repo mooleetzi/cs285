@@ -59,7 +59,8 @@ class MLPPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
             )
             self.mean_net.to(ptu.device)
             self.logstd = nn.Parameter(
-                torch.zeros(self.ac_dim, dtype=torch.float32, device=ptu.device)
+                torch.zeros(self.ac_dim, dtype=torch.float32,
+                            device=ptu.device)
             )
             self.logstd.to(ptu.device)
             self.optimizer = optim.Adam(
@@ -85,7 +86,7 @@ class MLPPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
         # in `__init__` by doing `self.mean_net`
         # HINT2: in the discrete case, this action can be an int
         # HINT3: in the continuous case, this action can be a np.ndarray
-        obs = ptu.from_numpy(obs)
+        obs = ptu.from_numpy(observation)
         with torch.no_grad():
             ac = self(obs).sample()
         return ptu.to_numpy(ac)
@@ -105,7 +106,7 @@ class MLPPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
             ac = torch.distributions.Categorical(outputs)
         else:
             outputs = self.mean_net(observation)
-            ac = torch.distributions.Normal(outputs,torch.exp(self.logstd))
+            ac = torch.distributions.Normal(outputs, self.logstd)
         return ac
 
 
@@ -124,8 +125,8 @@ class MLPPolicySL(MLPPolicy):
         # TODO: update the policy and return the loss
         actions = ptu.from_numpy(actions)
         observations = ptu.from_numpy(observations)
-        ac_pred=self(observations).rsample()
-        loss = self.loss(ac_pred,actions)
+        ac_pred = self(observations).rsample()
+        loss = self.loss(ac_pred, actions)
 
         self.optimizer.zero_grad()
         loss.backward()
