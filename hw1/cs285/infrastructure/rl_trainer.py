@@ -1,6 +1,7 @@
 from collections import OrderedDict
 import numpy as np
 import time
+import pickle
 
 import gym
 import torch
@@ -160,7 +161,9 @@ class RL_Trainer(object):
         # (1) load the data. In this case you can directly return as follows
         # ``` return loaded_paths, 0, None ```
         if itr == 0:
-            return self.agent.load_data(load_initial_expertdata), 0, None
+            with open(load_initial_expertdata, 'rb') as f:
+                loaded_paths = pickle.load(f)
+            return loaded_paths, 0 , None
 
         # (2) collect `self.params['batch_size']` transitions
 

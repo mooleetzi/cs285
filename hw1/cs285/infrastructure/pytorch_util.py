@@ -48,7 +48,9 @@ def build_mlp(
     # Note: nn.Sequential is an instance of nn.Module.
     # raise NotImplementedError
     return nn.Sequential(
-        *[nn.Linear(input_size, size), activation] * n_layers,
+        nn.Linear(input_size, size),
+        activation,
+        *[nn.Linear(size, size), activation] * n_layers,
         nn.Linear(size, output_size),
         output_activation,
     )

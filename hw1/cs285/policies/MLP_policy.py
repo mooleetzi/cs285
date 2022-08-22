@@ -85,12 +85,10 @@ class MLPPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
         # in `__init__` by doing `self.mean_net`
         # HINT2: in the discrete case, this action can be an int
         # HINT3: in the continuous case, this action can be a np.ndarray
-        if self.discrete:
-            logits = self.logits_na(observation)
-            return torch.argmax(logits, dim=1).item()
-        else:
-            mean = self.mean_net(observation)
-            return mean.detach().numpy()
+        obs = ptu.from_numpy(obs)
+        with torch.no_grad():
+            ac = self(obs).sample()
+        return ptu.to_numpy(ac)
 
     # update/train this policy
     def update(self, observations, actions, **kwargs):
@@ -103,12 +101,12 @@ class MLPPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
     # `torch.distributions.Distribution` object. It's up to you!
     def forward(self, observation: torch.FloatTensor) -> Any:
         if self.discrete:
-            logits = self.logits_na(observation)
-            return distributions.Categorical(logits=logits)
+            outputs = self.logits_na(observation)
+            ac = torch.distributions.Categorical(outputs)
         else:
-            mean = self.mean_net(observation)
-            std = torch.exp(self.logstd)
-            return distributions.Normal(mean, std)
+            outputs = self.mean_net(observation)
+            ac = torch.distributions.Normal(outputs,torch.exp(self.logstd))
+        return ac
 
 
 #####################################################
@@ -124,18 +122,12 @@ class MLPPolicySL(MLPPolicy):
             adv_n=None, acs_labels_na=None, qvals=None
     ):
         # TODO: update the policy and return the loss
-        loss = None
+        actions = ptu.from_numpy(actions)
+        observations = ptu.from_numpy(observations)
+        ac_pred=self(observations).rsample()
+        loss = self.loss(ac_pred,actions)
+
         self.optimizer.zero_grad()
-        if self.discrete:
-            logits_na = self.forward(observations)
-            if acs_labels_na is None:
-                acs_labels_na = torch.argmax(logits_na, dim=1)
-            loss = self.loss(logits_na, acs_labels_na)
-        else:
-            mean_na = self.forward(observations)
-            if qvals is None:
-                qvals = mean_na
-            loss = self.loss(mean_na, qvals)
         loss.backward()
         self.optimizer.step()
         return {
