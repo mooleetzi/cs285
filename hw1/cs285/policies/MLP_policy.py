@@ -102,11 +102,11 @@ class MLPPolicy(BasePolicy, nn.Module, metaclass=abc.ABCMeta):
     # `torch.distributions.Distribution` object. It's up to you!
     def forward(self, observation: torch.FloatTensor) -> Any:
         if self.discrete:
-            outputs = self.logits_na(observation)
+            outputs = F.softmax(self.logits_na(observation))
             ac = torch.distributions.Categorical(outputs)
         else:
             outputs = self.mean_net(observation)
-            ac = torch.distributions.Normal(outputs, self.logstd)
+            ac = torch.distributions.Normal(outputs, self.logstd.exp())
         return ac
 
 
