@@ -1,5 +1,9 @@
 import os
 import time
+import sys
+
+sys.path.append(os.path.abspath(
+    os.path.join(os.path.abspath(os.path.join(os.path.abspath(os.path.dirname(__file__)), os.pardir)), os.pardir)))
 
 from cs285.infrastructure.rl_trainer import RL_Trainer
 from cs285.agents.pg_agent import PGAgent
@@ -9,18 +13,18 @@ class PG_Trainer(object):
     def __init__(self, params):
 
         #####################
-        ## SET AGENT PARAMS
+        # SET AGENT PARAMS
         #####################
 
         computation_graph_args = {
             'n_layers': params['n_layers'],
             'size': params['size'],
             'learning_rate': params['learning_rate'],
-            }
+        }
 
         estimate_advantage_args = {
             'gamma': params['discount'],
-            'standardize_advantages': not(params['dont_standardize_advantages']),
+            'standardize_advantages': not (params['dont_standardize_advantages']),
             'reward_to_go': params['reward_to_go'],
             'nn_baseline': params['nn_baseline'],
             'gae_lambda': params['gae_lambda'],
@@ -30,7 +34,8 @@ class PG_Trainer(object):
             'num_agent_train_steps_per_iter': params['num_agent_train_steps_per_iter'],
         }
 
-        agent_params = {**computation_graph_args, **estimate_advantage_args, **train_args}
+        agent_params = {**computation_graph_args, **
+                        estimate_advantage_args, **train_args}
 
         self.params = params
         self.params['agent_class'] = PGAgent
@@ -38,7 +43,7 @@ class PG_Trainer(object):
         self.params['batch_size_initial'] = self.params['batch_size']
 
         ################
-        ## RL TRAINER
+        # RL TRAINER
         ################
 
         self.rl_trainer = RL_Trainer(self.params)
@@ -47,9 +52,9 @@ class PG_Trainer(object):
 
         self.rl_trainer.run_training_loop(
             self.params['n_iter'],
-            collect_policy = self.rl_trainer.agent.actor,
-            eval_policy = self.rl_trainer.agent.actor,
-            )
+            collect_policy=self.rl_trainer.agent.actor,
+            eval_policy=self.rl_trainer.agent.actor,
+        )
 
 
 def main():
@@ -63,18 +68,24 @@ def main():
     parser.add_argument('--reward_to_go', '-rtg', action='store_true')
     parser.add_argument('--nn_baseline', action='store_true')
     parser.add_argument('--gae_lambda', type=float, default=None)
-    parser.add_argument('--dont_standardize_advantages', '-dsa', action='store_true')
-    parser.add_argument('--batch_size', '-b', type=int, default=1000) #steps collected per train iteration
-    parser.add_argument('--eval_batch_size', '-eb', type=int, default=400) #steps collected per eval iteration
-    parser.add_argument('--train_batch_size', '-tb', type=int, default=1000) ##steps used per gradient step
+    parser.add_argument('--dont_standardize_advantages',
+                        '-dsa', action='store_true')
+    # steps collected per train iteration
+    parser.add_argument('--batch_size', '-b', type=int, default=1000)
+    # steps collected per eval iteration
+    parser.add_argument('--eval_batch_size', '-eb', type=int, default=400)
+    parser.add_argument('--train_batch_size', '-tb', type=int,
+                        default=1000)  # steps used per gradient step
 
-    parser.add_argument('--num_agent_train_steps_per_iter', type=int, default=1)
+    parser.add_argument('--num_agent_train_steps_per_iter',
+                        type=int, default=1)
     parser.add_argument('--discount', type=float, default=1.0)
     parser.add_argument('--learning_rate', '-lr', type=float, default=5e-3)
     parser.add_argument('--n_layers', '-l', type=int, default=2)
     parser.add_argument('--size', '-s', type=int, default=64)
 
-    parser.add_argument('--ep_len', type=int) #students shouldn't change this away from env's default
+    # students shouldn't change this away from env's default
+    parser.add_argument('--ep_len', type=int)
     parser.add_argument('--seed', type=int, default=1)
     parser.add_argument('--no_gpu', '-ngpu', action='store_true')
     parser.add_argument('--which_gpu', '-gpu_id', default=0)
@@ -95,24 +106,26 @@ def main():
     params['train_batch_size'] = params['batch_size']
 
 ##################################
-    ### CREATE DIRECTORY FOR LOGGING
+    # CREATE DIRECTORY FOR LOGGING
     ##################################
 
     logdir_prefix = 'q2_pg_'  # keep for autograder
 
-    data_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../data')
+    data_path = os.path.join(os.path.dirname(
+        os.path.realpath(__file__)), '../../data')
 
     if not (os.path.exists(data_path)):
         os.makedirs(data_path)
 
-    logdir = logdir_prefix + args.exp_name + '_' + args.env_name + '_' + time.strftime("%d-%m-%Y_%H-%M-%S")
+    logdir = logdir_prefix + args.exp_name + '_' + \
+        args.env_name + '_' + time.strftime("%d-%m-%Y_%H-%M-%S")
     logdir = os.path.join(data_path, logdir)
     params['logdir'] = logdir
-    if not(os.path.exists(logdir)):
+    if not (os.path.exists(logdir)):
         os.makedirs(logdir)
 
     ###################
-    ### RUN TRAINING
+    # RUN TRAINING
     ###################
 
     trainer = PG_Trainer(params)

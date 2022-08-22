@@ -1,3 +1,6 @@
+from cs285.policies.loaded_gaussian_policy import LoadedGaussianPolicy
+from cs285.agents.bc_agent import BCAgent
+from cs285.infrastructure.rl_trainer import RL_Trainer
 import os
 import time
 import sys
@@ -5,16 +8,12 @@ import sys
 sys.path.append(os.path.abspath(
     os.path.join(os.path.abspath(os.path.join(os.path.abspath(os.path.dirname(__file__)), os.pardir)), os.pardir)))
 
-from cs285.infrastructure.rl_trainer import RL_Trainer
-from cs285.agents.bc_agent import BCAgent
-from cs285.policies.loaded_gaussian_policy import LoadedGaussianPolicy
-
 
 class BC_Trainer(object):
 
     def __init__(self, params):
         #######################
-        ## AGENT PARAMS
+        # AGENT PARAMS
         #######################
 
         agent_params = {
@@ -25,21 +24,23 @@ class BC_Trainer(object):
         }
 
         self.params = params
-        self.params['agent_class'] = BCAgent  ## HW1: you will modify this
+        self.params['agent_class'] = BCAgent  # HW1: you will modify this
         self.params['agent_params'] = agent_params
 
         ################
-        ## RL TRAINER
+        # RL TRAINER
         ################
 
-        self.rl_trainer = RL_Trainer(self.params)  ## HW1: you will modify this
+        self.rl_trainer = RL_Trainer(self.params)  # HW1: you will modify this
 
         #######################
-        ## LOAD EXPERT POLICY
+        # LOAD EXPERT POLICY
         #######################
 
-        print('Loading expert policy from...', self.params['expert_policy_file'])
-        self.loaded_expert_policy = LoadedGaussianPolicy(self.params['expert_policy_file'])
+        print('Loading expert policy from...',
+              self.params['expert_policy_file'])
+        self.loaded_expert_policy = LoadedGaussianPolicy(
+            self.params['expert_policy_file'])
         print('Done restoring expert policy...')
 
     def run_training_loop(self):
@@ -62,7 +63,8 @@ def main():
                         required=True)  # relative to where you're running this script from
     parser.add_argument('--env_name', '-env', type=str,
                         help='choices: Ant-v2, Humanoid-v2, Walker-v2, HalfCheetah-v2, Hopper-v2', required=True)
-    parser.add_argument('--exp_name', '-exp', type=str, default='pick an experiment name', required=True)
+    parser.add_argument('--exp_name', '-exp', type=str,
+                        default='pick an experiment name', required=True)
     parser.add_argument('--do_dagger', action='store_true')
     parser.add_argument('--ep_len', type=int)
 
@@ -77,9 +79,12 @@ def main():
     parser.add_argument('--train_batch_size', type=int,
                         default=100)  # number of sampled data points to be used per gradient/train step
 
-    parser.add_argument('--n_layers', type=int, default=2)  # depth, of policy to be learned
-    parser.add_argument('--size', type=int, default=64)  # width of each layer, of policy to be learned
-    parser.add_argument('--learning_rate', '-lr', type=float, default=5e-3)  # LR for supervised learning
+    # depth, of policy to be learned
+    parser.add_argument('--n_layers', type=int, default=2)
+    # width of each layer, of policy to be learned
+    parser.add_argument('--size', type=int, default=64)
+    parser.add_argument('--learning_rate', '-lr', type=float,
+                        default=5e-3)  # LR for supervised learning
 
     parser.add_argument('--video_log_freq', type=int, default=5)
     parser.add_argument('--scalar_log_freq', type=int, default=1)
@@ -94,7 +99,7 @@ def main():
     params = vars(args)
 
     ##################################
-    ### CREATE DIRECTORY FOR LOGGING
+    # CREATE DIRECTORY FOR LOGGING
     ##################################
 
     if args.do_dagger:
@@ -105,20 +110,23 @@ def main():
     else:
         # Use this prefix when submitting. The auto-grader uses this prefix.
         logdir_prefix = 'q1_'
-        assert args.n_iter == 1, ('Vanilla behavior cloning collects expert data just once (n_iter=1)')
+        assert args.n_iter == 1, (
+            'Vanilla behavior cloning collects expert data just once (n_iter=1)')
 
-    ## directory for logging
-    data_path = os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../data')
+    # directory for logging
+    data_path = os.path.join(os.path.dirname(
+        os.path.realpath(__file__)), '../../data')
     if not (os.path.exists(data_path)):
         os.makedirs(data_path)
-    logdir = logdir_prefix + args.exp_name + '_' + args.env_name + '_' + time.strftime("%d-%m-%Y_%H-%M-%S")
+    logdir = logdir_prefix + args.exp_name + '_' + \
+        args.env_name + '_' + time.strftime("%d-%m-%Y_%H-%M-%S")
     logdir = os.path.join(data_path, logdir)
     params['logdir'] = logdir
     if not (os.path.exists(logdir)):
         os.makedirs(logdir)
 
     ###################
-    ### RUN TRAINING
+    # RUN TRAINING
     ###################
 
     trainer = BC_Trainer(params)
